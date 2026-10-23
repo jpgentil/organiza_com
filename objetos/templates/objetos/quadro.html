@@ -1,0 +1,64 @@
+{% extends "objetos/base.html" %}
+
+{% block head %}<meta http-equiv="refresh" content="60">{% endblock %}
+{% block title %}Quadro{% endblock %}
+
+{% block content %}
+<div class="quadro">
+  <section class="coluna coluna-indisponivel">
+    <h2>Não disponíveis <span class="contador">{{ indisponiveis|length }}</span></h2>
+    {% for objeto in indisponiveis %}
+      {% with uso=objeto.uso_atual %}
+      <article class="card card-indisponivel">
+        <header>
+          <h3>{{ objeto.nome }}</h3>
+          <span class="tag">{{ objeto.get_categoria_display }}</span>
+        </header>
+        <dl>
+          <dt>Com</dt><dd>{{ uso.usuario.get_full_name|default:uso.usuario.username }}</dd>
+          <dt>Desde</dt><dd>{{ uso.retirado_em|date:"d/m/Y H:i" }}</dd>
+          <dt>Motivo</dt><dd>{{ uso.motivo }}</dd>
+        </dl>
+        {% if user.is_authenticated %}{% if user.pk == uso.usuario_id or user.is_staff %}
+          <form method="post" action="{% url 'devolver' objeto.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-devolver">Devolver</button>
+          </form>
+        {% endif %}{% endif %}
+      </article>
+      {% endwith %}
+    {% empty %}
+      <p class="vazio">Nenhum objeto em uso no momento.</p>
+    {% endfor %}
+  </section>
+
+  <section class="coluna coluna-disponivel">
+    <h2>Disponíveis <span class="contador">{{ disponiveis|length }}</span></h2>
+    {% for objeto in disponiveis %}
+      {% with uso=objeto.ultimo_uso %}
+      <article class="card card-disponivel">
+        <header>
+          <h3>{{ objeto.nome }}</h3>
+          <span class="tag">{{ objeto.get_categoria_display }}</span>
+        </header>
+        {% if uso %}
+          <dl>
+            <dt>Último uso</dt><dd>{{ uso.usuario.get_full_name|default:uso.usuario.username }}</dd>
+            <dt>Quando</dt><dd>{{ uso.retirado_em|date:"d/m/Y H:i" }} – {{ uso.devolvido_em|date:"d/m/Y H:i" }}</dd>
+            <dt>Motivo</dt><dd>{{ uso.motivo }}</dd>
+          </dl>
+        {% else %}
+          <p class="sem-uso">Ainda não foi utilizado.</p>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a class="btn btn-pegar" href="{% url 'pegar' objeto.pk %}">Pegar</a>
+        {% endif %}
+      </article>
+      {% endwith %}
+    {% empty %}
+      <p class="vazio">Nenhum objeto disponível.</p>
+    {% endfor %}
+  </section>
+</div>
+<p class="rodape">Atualizado em {% now "d/m/Y H:i" %} · a página se atualiza sozinha a cada minuto.</p>
+{% endblock %}

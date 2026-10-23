@@ -1,0 +1,17 @@
+{% extends "objetos/base.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="painel painel-estreito">
+  <h1>{{ titulo }}</h1>
+  <form method="post" class="formulario">
+    {% csrf_token %}
+    {% include "objetos/_campos.html" %}
+    <div class="acoes">
+      <a class="btn btn-secundario" href="{% url 'usuarios' %}">Cancelar</a>
+      <button type="submit" class="btn">Salvar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
