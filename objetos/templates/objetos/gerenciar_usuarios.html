@@ -1,0 +1,30 @@
+{% extends "objetos/base.html" %}
+
+{% block title %}Usuários{% endblock %}
+
+{% block content %}
+<div class="painel">
+  <div class="titulo-acao">
+    <h1>Usuários</h1>
+    <a class="btn" href="{% url 'usuario_criar' %}">+ Cadastrar usuário</a>
+  </div>
+  <div class="tabela-wrap">
+    <table class="tabela">
+      <thead>
+        <tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Situação</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for u in usuarios %}
+          <tr{% if not u.is_active %} class="inativo"{% endif %}>
+            <td>{{ u.get_full_name|default:"—" }}</td>
+            <td>{{ u.username }}</td>
+            <td>{% if u.is_staff %}<span class="tag tag-admin">Administrador</span>{% else %}<span class="tag">Utilizador</span>{% endif %}</td>
+            <td>{% if u.is_active %}Ativo{% else %}Inativo{% endif %}</td>
+            <td><a href="{% url 'usuario_editar' u.pk %}">Editar</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

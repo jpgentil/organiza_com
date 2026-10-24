@@ -1,0 +1,18 @@
+{% extends "objetos/base.html" %}
+
+{% block title %}Entrar{% endblock %}
+
+{% block content %}
+<div class="painel painel-estreito">
+  <h1>Entrar</h1>
+  <p class="sub">Use o login fornecido pela coordenação.</p>
+  <form method="post" class="formulario">
+    {% csrf_token %}
+    {% include "objetos/_campos.html" %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <div class="acoes">
+      <button type="submit" class="btn">Entrar</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
