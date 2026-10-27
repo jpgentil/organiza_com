@@ -18,7 +18,7 @@ class BaseTestCase(TestCase):
         self.user = User.objects.create_user("maria", password="senha-forte-123", first_name="Maria")
         self.outro = User.objects.create_user("joao", password="senha-forte-123", first_name="João")
         self.admin = User.objects.create_user("chefe", password="senha-forte-123", is_staff=True)
-        self.tripe = Objeto.objects.get(nome="Tripé 1")
+        self.tripe = Objeto.objects.get(nome="Tripé de celular com suporte 1")
         self.matheus = Retirante.objects.get(nome="Matheus")
         self.sandro = Retirante.objects.get(nome="Sandro")
 
@@ -29,13 +29,19 @@ class BaseTestCase(TestCase):
 
 
 class InventarioTests(TestCase):
-    def test_inventario_inicial(self):
-        self.assertEqual(Objeto.objects.count(), 13)
-        self.assertEqual(Objeto.objects.filter(categoria="tripe").count(), 6)
-        self.assertEqual(Objeto.objects.filter(categoria="kit_camera").count(), 3)
-        self.assertEqual(Objeto.objects.filter(categoria="filmadora").count(), 2)
-        self.assertTrue(Objeto.objects.filter(nome="Lapela").exists())
-        self.assertTrue(Objeto.objects.filter(nome="Drone").exists())
+    def test_inventario(self):
+        ativos = Objeto.objects.filter(ativo=True)
+        self.assertEqual(ativos.count(), 55)
+        self.assertEqual(ativos.filter(categoria="camera").count(), 3)
+        self.assertEqual(ativos.filter(categoria="carregador").count(), 10)
+        self.assertEqual(ativos.filter(categoria="tripe").count(), 8)
+        self.assertEqual(ativos.filter(categoria="lapela").count(), 6)
+        self.assertTrue(ativos.filter(nome="Drone DJI Air 2S").exists())
+        self.assertTrue(ativos.filter(nome="Câmera Canon 5D Mark IV 3").exists())
+
+    def test_inventario_antigo(self):
+        self.assertFalse(Objeto.objects.filter(nome__in=["Drone", "Kit de câmera 1"]).exists())
+        self.assertEqual(Objeto.objects.filter(nome__startswith="Tripé ", ativo=False).count(), 6)
 
     def test_retirantes_iniciais(self):
         self.assertEqual(
@@ -48,7 +54,7 @@ class QuadroTests(BaseTestCase):
     def test_quadro_publico_sem_botoes(self):
         resp = self.client.get(reverse("quadro"))
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(len(resp.context["disponiveis"]), 13)
+        self.assertEqual(len(resp.context["disponiveis"]), 55)
         self.assertNotContains(resp, "Pegar</a>")
 
     def test_quadro_mostra_quem_esta_com_objeto(self):
@@ -57,7 +63,7 @@ class QuadroTests(BaseTestCase):
             motivo="Evento no auditório",
         )
         resp = self.client.get(reverse("quadro"))
-        self.assertEqual([o.nome for o in resp.context["indisponiveis"]], ["Tripé 1"])
+        self.assertEqual([o.nome for o in resp.context["indisponiveis"]], ["Tripé de celular com suporte 1"])
         self.assertContains(resp, "Matheus")
         self.assertContains(resp, "Maria Souza")
         self.assertContains(resp, "Evento no auditório")

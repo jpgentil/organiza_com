@@ -6,11 +6,19 @@ from django.utils import timezone
 
 class Objeto(models.Model):
     class Categoria(models.TextChoices):
-        LAPELA = "lapela", "Lapela"
-        KIT_CAMERA = "kit_camera", "Kit de câmera"
-        DRONE = "drone", "Drone"
-        TRIPE = "tripe", "Tripé"
+        CAMERA = "camera", "Câmera"
+        LENTE = "lente", "Lente"
+        BATERIA = "bateria", "Bateria"
+        CARREGADOR = "carregador", "Carregador"
+        CARTAO = "cartao", "Cartão de memória"
         FILMADORA = "filmadora", "Filmadora"
+        DRONE = "drone", "Drone"
+        LAPELA = "lapela", "Lapela"
+        MICROFONE = "microfone", "Microfone"
+        ILUMINACAO = "iluminacao", "Iluminação"
+        TRIPE = "tripe", "Tripé e suporte"
+        ESTABILIZADOR = "estabilizador", "Estabilizador"
+        ACESSORIO = "acessorio", "Acessório e cabo"
         OUTRO = "outro", "Outro"
 
     nome = models.CharField("nome", max_length=100, unique=True)

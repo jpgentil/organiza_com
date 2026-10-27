@@ -13,7 +13,7 @@ Sistema da Coordenação de Comunicação (CCOM) da Defensoria Pública de Rorai
 - **Usuários** (`/gestao/usuarios/`, só para administradores): cadastrar utilizadores e administradores, editar, trocar senha e desativar.
 - **Admin** (`/admin/`): cadastrar, editar e desativar objetos e retirantes e corrigir registros.
 
-Inventário inicial (criado automaticamente): 1 lapela, 3 kits de câmera, 1 drone, 6 tripés e 2 filmadoras.
+Inventário (criado automaticamente pelas migrações, uma entrada por unidade, 55 no total): 3 câmeras Canon 5D Mark IV, 5 lentes, 7 baterias, 10 carregadores, 2 cartões de câmera, 2 filmadoras, 1 drone DJI Air 2S, 6 lapelas, 3 microfones Shure SV100, 4 LEDs, 8 tripés e suportes de celular, 1 estabilizador DJI 4SE e 3 cabos e adaptadores. Para incluir, editar ou desativar itens, use o Admin.
 
 ## Instalação
 ```bash
