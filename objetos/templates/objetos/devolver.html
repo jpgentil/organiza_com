@@ -1,0 +1,18 @@
+{% extends "objetos/base.html" %}
+
+{% block title %}Devolver {{ objeto.nome }}{% endblock %}
+
+{% block content %}
+<div class="painel painel-estreito">
+  <h1>Registrar devolução de “{{ objeto.nome }}”</h1>
+  <p class="sub">Com {{ uso.quem_pegou }} desde {{ uso.retirado_em|date:"d/m/Y H:i" }} · Solicitante: {{ uso.solicitante }}</p>
+  <form method="post" class="formulario">
+    {% csrf_token %}
+    {% include "objetos/_campos.html" %}
+    <div class="acoes">
+      <a class="btn btn-secundario" href="{% url 'quadro' %}">Cancelar</a>
+      <button type="submit" class="btn btn-devolver">Confirmar devolução</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

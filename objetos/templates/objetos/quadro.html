@@ -15,16 +15,14 @@
           <span class="tag">{{ objeto.get_categoria_display }}</span>
         </header>
         <dl>
-          <dt>Com</dt><dd>{{ uso.usuario.get_full_name|default:uso.usuario.username }}</dd>
+          <dt>Com</dt><dd>{{ uso.quem_pegou }}</dd>
+          <dt>Solicitante</dt><dd>{{ uso.solicitante }}</dd>
           <dt>Desde</dt><dd>{{ uso.retirado_em|date:"d/m/Y H:i" }}</dd>
           <dt>Motivo</dt><dd>{{ uso.motivo }}</dd>
         </dl>
-        {% if user.is_authenticated %}{% if user.pk == uso.usuario_id or user.is_staff %}
-          <form method="post" action="{% url 'devolver' objeto.pk %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-devolver">Devolver</button>
-          </form>
-        {% endif %}{% endif %}
+        {% if user.is_staff %}
+          <a class="btn btn-devolver" href="{% url 'devolver' objeto.pk %}">Devolver</a>
+        {% endif %}
       </article>
       {% endwith %}
     {% empty %}
@@ -43,14 +41,14 @@
         </header>
         {% if uso %}
           <dl>
-            <dt>Último uso</dt><dd>{{ uso.usuario.get_full_name|default:uso.usuario.username }}</dd>
+            <dt>Último uso</dt><dd>{{ uso.quem_pegou }}</dd>
             <dt>Quando</dt><dd>{{ uso.retirado_em|date:"d/m/Y H:i" }} – {{ uso.devolvido_em|date:"d/m/Y H:i" }}</dd>
             <dt>Motivo</dt><dd>{{ uso.motivo }}</dd>
           </dl>
         {% else %}
           <p class="sem-uso">Ainda não foi utilizado.</p>
         {% endif %}
-        {% if user.is_authenticated %}
+        {% if user.is_staff %}
           <a class="btn btn-pegar" href="{% url 'pegar' objeto.pk %}">Pegar</a>
         {% endif %}
       </article>

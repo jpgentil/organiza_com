@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
 
 class Objeto(models.Model):
@@ -36,7 +37,7 @@ class Objeto(models.Model):
         # Usa a lista pré-carregada pelo quadro (prefetch) quando disponível.
         if hasattr(self, "utilizacoes_ordenadas"):
             return self.utilizacoes_ordenadas
-        return list(self.utilizacoes.select_related("usuario").order_by("-retirado_em"))
+        return list(self.utilizacoes.select_related("usuario", "retirado_por").order_by("-retirado_em"))
 
     @property
     def uso_atual(self):
@@ -51,6 +52,21 @@ class Objeto(models.Model):
         return self.uso_atual is None
 
 
+class Retirante(models.Model):
+    nome = models.CharField("nome", max_length=100, unique=True)
+    ativo = models.BooleanField(
+        "ativo", default=True, help_text="Desmarque para tirar o nome da lista sem apagar o histórico."
+    )
+
+    class Meta:
+        verbose_name = "retirante"
+        verbose_name_plural = "retirantes"
+        ordering = ["nome"]
+
+    def __str__(self):
+        return self.nome
+
+
 class Utilizacao(models.Model):
     objeto = models.ForeignKey(
         Objeto, on_delete=models.CASCADE, related_name="utilizacoes", verbose_name="objeto"
@@ -59,11 +75,27 @@ class Utilizacao(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="utilizacoes",
-        verbose_name="utilizador",
+        verbose_name="entrega registrada por",
+    )
+    solicitante = models.CharField("solicitante", max_length=150)
+    retirado_por = models.ForeignKey(
+        Retirante,
+        on_delete=models.PROTECT,
+        null=True,
+        related_name="utilizacoes",
+        verbose_name="quem pegou",
     )
     motivo = models.TextField("motivo")
-    retirado_em = models.DateTimeField("retirado em", auto_now_add=True)
+    retirado_em = models.DateTimeField("retirado em", default=timezone.now)
     devolvido_em = models.DateTimeField("devolvido em", null=True, blank=True)
+    devolucao_registrada_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="devolucoes_registradas",
+        verbose_name="devolução registrada por",
+    )
 
     class Meta:
         verbose_name = "utilização"
@@ -79,4 +111,11 @@ class Utilizacao(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.objeto} — {self.usuario}"
+        return f"{self.objeto} — {self.quem_pegou}"
+
+    @property
+    def quem_pegou(self):
+        # Registros anteriores à lista de retirantes não têm retirado_por.
+        if self.retirado_por is not None:
+            return self.retirado_por.nome
+        return self.usuario.get_full_name() or self.usuario.username

@@ -4,13 +4,14 @@ Sistema da Coordenação de Comunicação (CCOM) da Defensoria Pública de Rorai
 
 ## Funcionalidades
 - **Quadro público** (`/`): duas colunas.
-  - *Não disponíveis*: objeto, quem está com ele, desde quando e o motivo.
+  - *Não disponíveis*: objeto, quem está com ele, quem solicitou, desde quando e o motivo.
   - *Disponíveis*: objeto, último utilizador, quando foi usado e o motivo.
   - A página se atualiza sozinha a cada minuto.
-- **Pegar / Devolver**: o utilizador entra com o próprio login, clica em *Pegar* e informa o motivo. Só quem pegou (ou um administrador) pode devolver.
-- **Histórico** (`/historico/`): todas as utilizações, com filtro por objeto e por usuário.
+- **Entrega / Devolução**: só administradores registram. Na entrega (*Pegar*), o administrador informa o solicitante, quem pegou o objeto (escolhido na lista de retirantes), o horário e o motivo. Na devolução (*Devolver*), informa o horário. Os demais usuários só consultam o quadro e o histórico.
+- **Retirantes**: lista de nomes que podem aparecer como "quem pegou" (inicialmente Celton, Luciana, Wallyson, Matheus, Ellainy, Sandro, Jeovana, Deboráh e Wesllyn). Para incluir ou desativar nomes, use o Admin.
+- **Histórico** (`/historico/`): todas as utilizações, com filtro por objeto e por quem pegou.
 - **Usuários** (`/gestao/usuarios/`, só para administradores): cadastrar utilizadores e administradores, editar, trocar senha e desativar.
-- **Admin** (`/admin/`): cadastrar, editar e desativar objetos e corrigir registros.
+- **Admin** (`/admin/`): cadastrar, editar e desativar objetos e retirantes e corrigir registros.
 
 Inventário inicial (criado automaticamente): 1 lapela, 3 kits de câmera, 1 drone, 6 tripés e 2 filmadoras.
 

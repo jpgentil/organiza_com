@@ -6,10 +6,9 @@ from django.db import IntegrityError, transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
 
-from .forms import PegarForm, UsuarioCriarForm, UsuarioEditarForm
-from .models import Objeto, Utilizacao
+from .forms import DevolverForm, PegarForm, UsuarioCriarForm, UsuarioEditarForm
+from .models import Objeto, Retirante, Utilizacao
 
 admin_required = user_passes_test(lambda u: u.is_active and u.is_staff)
 
@@ -22,7 +21,7 @@ def quadro(request):
     objetos = Objeto.objects.filter(ativo=True).prefetch_related(
         Prefetch(
             "utilizacoes",
-            queryset=Utilizacao.objects.select_related("usuario").order_by("-retirado_em"),
+            queryset=Utilizacao.objects.select_related("usuario", "retirado_por").order_by("-retirado_em"),
             to_attr="utilizacoes_ordenadas",
         )
     )
@@ -36,54 +35,55 @@ def quadro(request):
     )
 
 
-@login_required
+@admin_required
 def pegar(request, pk):
     objeto = get_object_or_404(Objeto, pk=pk, ativo=True)
     if not objeto.disponivel:
-        messages.error(request, f"“{objeto}” já está em uso por {nome_usuario(objeto.uso_atual.usuario)}.")
+        messages.error(request, f"“{objeto}” já está com {objeto.uso_atual.quem_pegou}.")
         return redirect("quadro")
 
     form = PegarForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         try:
             with transaction.atomic():
-                Utilizacao.objects.create(
-                    objeto=objeto, usuario=request.user, motivo=form.cleaned_data["motivo"]
-                )
+                uso = Utilizacao.objects.create(objeto=objeto, usuario=request.user, **form.cleaned_data)
         except IntegrityError:
-            messages.error(request, f"“{objeto}” acabou de ser pego por outra pessoa.")
+            messages.error(request, f"“{objeto}” acabou de ser entregue por outra pessoa.")
         else:
-            messages.success(request, f"Você pegou “{objeto}”. Lembre-se de devolver no sistema.")
+            messages.success(request, f"Entrega de “{objeto}” para {uso.quem_pegou} registrada.")
         return redirect("quadro")
 
     return render(request, "objetos/pegar.html", {"objeto": objeto, "form": form})
 
 
-@login_required
-@require_POST
+@admin_required
 def devolver(request, pk):
     objeto = get_object_or_404(Objeto, pk=pk)
     uso = objeto.uso_atual
     if uso is None:
         messages.info(request, f"“{objeto}” já estava disponível.")
-    elif uso.usuario_id != request.user.pk and not request.user.is_staff:
-        messages.error(request, "Só quem pegou o objeto (ou um administrador) pode devolvê-lo.")
-    else:
-        uso.devolvido_em = timezone.now()
-        uso.save(update_fields=["devolvido_em"])
-        messages.success(request, f"“{objeto}” foi devolvido.")
-    return redirect("quadro")
+        return redirect("quadro")
+
+    form = DevolverForm(request.POST or None, retirado_em=uso.retirado_em)
+    if request.method == "POST" and form.is_valid():
+        uso.devolvido_em = form.cleaned_data["devolvido_em"]
+        uso.devolucao_registrada_por = request.user
+        uso.save(update_fields=["devolvido_em", "devolucao_registrada_por"])
+        messages.success(request, f"Devolução de “{objeto}” registrada.")
+        return redirect("quadro")
+
+    return render(request, "objetos/devolver.html", {"objeto": objeto, "uso": uso, "form": form})
 
 
 @login_required
 def historico(request):
-    usos = Utilizacao.objects.select_related("objeto", "usuario")
+    usos = Utilizacao.objects.select_related("objeto", "usuario", "retirado_por", "devolucao_registrada_por")
     objeto_id = request.GET.get("objeto") or ""
-    usuario_id = request.GET.get("usuario") or ""
+    retirante_id = request.GET.get("retirante") or ""
     if objeto_id.isdigit():
         usos = usos.filter(objeto_id=objeto_id)
-    if usuario_id.isdigit():
-        usos = usos.filter(usuario_id=usuario_id)
+    if retirante_id.isdigit():
+        usos = usos.filter(retirado_por_id=retirante_id)
 
     pagina = Paginator(usos, 30).get_page(request.GET.get("pagina"))
     filtros = request.GET.copy()
@@ -94,9 +94,9 @@ def historico(request):
         {
             "pagina": pagina,
             "objetos": Objeto.objects.all(),
-            "usuarios": User.objects.order_by("first_name", "username"),
+            "retirantes": Retirante.objects.all(),
             "objeto_id": objeto_id,
-            "usuario_id": usuario_id,
+            "retirante_id": retirante_id,
             "filtros": filtros.urlencode(),
         },
     )

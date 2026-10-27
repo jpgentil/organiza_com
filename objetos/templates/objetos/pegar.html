@@ -1,17 +1,17 @@
 {% extends "objetos/base.html" %}
 
-{% block title %}Pegar {{ objeto.nome }}{% endblock %}
+{% block title %}Entregar {{ objeto.nome }}{% endblock %}
 
 {% block content %}
 <div class="painel painel-estreito">
-  <h1>Pegar “{{ objeto.nome }}”</h1>
+  <h1>Registrar entrega de “{{ objeto.nome }}”</h1>
   <p class="sub">{{ objeto.get_categoria_display }}{% if objeto.patrimonio %} · Patrimônio {{ objeto.patrimonio }}{% endif %}</p>
   <form method="post" class="formulario">
     {% csrf_token %}
     {% include "objetos/_campos.html" %}
     <div class="acoes">
       <a class="btn btn-secundario" href="{% url 'quadro' %}">Cancelar</a>
-      <button type="submit" class="btn btn-pegar">Confirmar retirada</button>
+      <button type="submit" class="btn btn-pegar">Confirmar entrega</button>
     </div>
   </form>
 </div>
