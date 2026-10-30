@@ -1,13 +1,14 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LoginView
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .forms import DevolverForm, PegarForm, UsuarioCriarForm, UsuarioEditarForm
+from .forms import DevolverForm, LoginForm, PegarForm, UsuarioCriarForm, UsuarioEditarForm
 from .models import Objeto, Retirante, Utilizacao
 
 admin_required = user_passes_test(lambda u: u.is_active and u.is_staff)
@@ -15,6 +16,16 @@ admin_required = user_passes_test(lambda u: u.is_active and u.is_staff)
 
 def nome_usuario(user):
     return user.get_full_name() or user.username
+
+
+class Entrar(LoginView):
+    authentication_form = LoginForm
+
+    def form_valid(self, form):
+        resposta = super().form_valid(form)
+        # None usa SESSION_COOKIE_AGE; 0 encerra a sessão ao fechar o navegador.
+        self.request.session.set_expiry(None if form.cleaned_data["manter_conectado"] else 0)
+        return resposta
 
 
 def quadro(request):
@@ -46,7 +57,9 @@ def pegar(request, pk):
     if request.method == "POST" and form.is_valid():
         try:
             with transaction.atomic():
-                uso = Utilizacao.objects.create(objeto=objeto, usuario=request.user, **form.cleaned_data)
+                uso = Utilizacao.objects.create(
+                    objeto=objeto, usuario=request.user, solicitante=nome_usuario(request.user), **form.cleaned_data
+                )
         except IntegrityError:
             messages.error(request, f"“{objeto}” acabou de ser entregue por outra pessoa.")
         else:

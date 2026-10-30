@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
@@ -27,12 +27,11 @@ def validar_nao_futuro(momento):
     return momento
 
 
+class LoginForm(AuthenticationForm):
+    manter_conectado = forms.BooleanField(label="Manter conectado", required=False)
+
+
 class PegarForm(forms.Form):
-    solicitante = forms.CharField(
-        label="Solicitante",
-        max_length=150,
-        widget=forms.TextInput(attrs={"placeholder": "Quem pediu o objeto"}),
-    )
     retirado_por = forms.ModelChoiceField(
         label="Quem pegou",
         queryset=Retirante.objects.filter(ativo=True),

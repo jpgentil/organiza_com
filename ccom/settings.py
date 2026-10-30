@@ -79,3 +79,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "quadro"
 LOGOUT_REDIRECT_URL = "quadro"
+
+# Sessões de "Manter conectado": 30 dias, renovados a cada acesso.
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
+SESSION_SAVE_EVERY_REQUEST = True

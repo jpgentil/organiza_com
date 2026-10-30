@@ -7,8 +7,9 @@ Sistema da Coordenação de Comunicação (CCOM) da Defensoria Pública de Rorai
   - *Não disponíveis*: objeto, quem está com ele, quem solicitou, desde quando e o motivo.
   - *Disponíveis*: objeto, último utilizador, quando foi usado e o motivo.
   - A página se atualiza sozinha a cada minuto.
-- **Entrega / Devolução**: só administradores registram. Na entrega (*Pegar*), o administrador informa o solicitante, quem pegou o objeto (escolhido na lista de retirantes), o horário e o motivo. Na devolução (*Devolver*), informa o horário. Os demais usuários só consultam o quadro e o histórico.
-- **Retirantes**: lista de nomes que podem aparecer como "quem pegou" (inicialmente Celton, Luciana, Wallyson, Matheus, Ellainy, Sandro, Jeovana, Deboráh e Wesllyn). Para incluir ou desativar nomes, use o Admin.
+- **Entrega / Devolução**: só administradores registram. Na entrega (*Pegar*), o administrador informa quem pegou o objeto (escolhido na lista de retirantes), o horário e o motivo; o solicitante é definido automaticamente como o administrador logado. Na devolução (*Devolver*), informa o horário. Os demais usuários só consultam o quadro e o histórico.
+- **Retirantes**: lista de nomes que podem aparecer como "quem pegou" (inicialmente Celton, Luciana, Wallyson, Matheus, Ellainy, Sandro, Jeovana, Deboráh, Wesllyn, Valdir, Diego, Jair e Walber). Para incluir ou desativar nomes, use o Admin.
+- **Login**: com *Manter conectado* marcado, a sessão dura 30 dias, renovados a cada acesso, mesmo com o computador desligado. Sem essa opção, ela termina ao fechar o navegador.
 - **Histórico** (`/historico/`): todas as utilizações, com filtro por objeto e por quem pegou.
 - **Usuários** (`/gestao/usuarios/`, só para administradores): cadastrar utilizadores e administradores, editar, trocar senha e desativar.
 - **Admin** (`/admin/`): cadastrar, editar e desativar objetos e retirantes e corrigir registros.

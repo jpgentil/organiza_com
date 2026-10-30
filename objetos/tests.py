@@ -46,8 +46,27 @@ class InventarioTests(TestCase):
     def test_retirantes_iniciais(self):
         self.assertEqual(
             set(Retirante.objects.values_list("nome", flat=True)),
-            {"Celton", "Luciana", "Wallyson", "Matheus", "Ellainy", "Sandro", "Jeovana", "Deboráh", "Wesllyn"},
+            {
+                "Celton", "Luciana", "Wallyson", "Matheus", "Ellainy", "Sandro", "Jeovana", "Deboráh", "Wesllyn",
+                "Valdir", "Diego", "Jair", "Walber",
+            },
         )
+
+
+class LoginTests(BaseTestCase):
+    def entrar(self, **dados):
+        return self.client.post(reverse("login"), {"username": "maria", "password": "senha-forte-123", **dados})
+
+    def test_manter_conectado_mantem_sessao_por_30_dias(self):
+        self.assertRedirects(self.entrar(manter_conectado="on"), reverse("quadro"))
+        self.assertFalse(self.client.session.get_expire_at_browser_close())
+        self.assertEqual(self.client.session.get_expiry_age(), 60 * 60 * 24 * 30)
+        self.assertEqual(self.client.cookies["sessionid"]["max-age"], 60 * 60 * 24 * 30)
+
+    def test_sem_manter_conectado_expira_ao_fechar_navegador(self):
+        self.assertRedirects(self.entrar(), reverse("quadro"))
+        self.assertTrue(self.client.session.get_expire_at_browser_close())
+        self.assertEqual(self.client.cookies["sessionid"]["max-age"], "")
 
 
 class QuadroTests(BaseTestCase):
@@ -89,7 +108,7 @@ class PegarDevolverTests(BaseTestCase):
         self.client.force_login(self.user)
         resp = self.client.post(
             reverse("pegar", args=[self.tripe.pk]),
-            {"solicitante": "Maria", "retirado_por": self.matheus.pk, "retirado_em": data_hora(timezone.now()), "motivo": "y"},
+            {"retirado_por": self.matheus.pk, "retirado_em": data_hora(timezone.now()), "motivo": "y"},
         )
         self.assertEqual(resp.status_code, 302)
         self.assertTrue(self.tripe.disponivel)
@@ -103,12 +122,12 @@ class PegarDevolverTests(BaseTestCase):
         retirada = timezone.now() - timedelta(hours=3)
         self.client.post(
             reverse("pegar", args=[self.tripe.pk]),
-            {"solicitante": "Maria Souza", "retirado_por": self.matheus.pk, "retirado_em": data_hora(retirada), "motivo": "Gravação"},
+            {"retirado_por": self.matheus.pk, "retirado_em": data_hora(retirada), "motivo": "Gravação"},
         )
         uso = self.tripe.uso_atual
         self.assertEqual(
             (uso.solicitante, uso.retirado_por, uso.motivo, uso.usuario),
-            ("Maria Souza", self.matheus, "Gravação", self.admin),
+            ("chefe", self.matheus, "Gravação", self.admin),
         )
         self.assertEqual(data_hora(uso.retirado_em), data_hora(retirada))
 
@@ -120,11 +139,22 @@ class PegarDevolverTests(BaseTestCase):
         self.assertEqual(data_hora(uso.devolvido_em), data_hora(devolucao))
         self.assertEqual(uso.devolucao_registrada_por, self.admin)
 
+    def test_solicitante_e_o_admin_logado(self):
+        self.admin.first_name, self.admin.last_name = "Ana", "Lima"
+        self.admin.save()
+        self.client.force_login(self.admin)
+        self.assertNotContains(self.client.get(reverse("pegar", args=[self.tripe.pk])), 'name="solicitante"')
+        self.client.post(
+            reverse("pegar", args=[self.tripe.pk]),
+            {"solicitante": "Outra Pessoa", "retirado_por": self.matheus.pk, "retirado_em": data_hora(timezone.now()), "motivo": "y"},
+        )
+        self.assertEqual(self.tripe.uso_atual.solicitante, "Ana Lima")
+
     def test_entrega_exige_quem_pegou(self):
         self.client.force_login(self.admin)
         resp = self.client.post(
             reverse("pegar", args=[self.tripe.pk]),
-            {"solicitante": "Maria", "retirado_em": data_hora(timezone.now()), "motivo": "y"},
+            {"retirado_em": data_hora(timezone.now()), "motivo": "y"},
         )
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(self.tripe.disponivel)
@@ -141,7 +171,6 @@ class PegarDevolverTests(BaseTestCase):
         resp = self.client.post(
             reverse("pegar", args=[self.tripe.pk]),
             {
-                "solicitante": "Maria",
                 "retirado_por": self.matheus.pk,
                 "retirado_em": data_hora(timezone.now() + timedelta(hours=2)),
                 "motivo": "y",
@@ -165,7 +194,7 @@ class PegarDevolverTests(BaseTestCase):
         self.client.force_login(self.admin)
         self.client.post(
             reverse("pegar", args=[self.tripe.pk]),
-            {"solicitante": "Maria", "retirado_por": self.matheus.pk, "retirado_em": data_hora(timezone.now()), "motivo": "y"},
+            {"retirado_por": self.matheus.pk, "retirado_em": data_hora(timezone.now()), "motivo": "y"},
         )
         self.assertEqual(Utilizacao.objects.filter(devolvido_em__isnull=True).count(), 1)
         self.assertEqual(self.tripe.uso_atual.retirado_por, self.sandro)
